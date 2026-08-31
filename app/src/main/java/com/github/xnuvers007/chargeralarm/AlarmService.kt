@@ -14,8 +14,10 @@ import android.media.AudioDeviceInfo
 import android.media.AudioManager
 import android.media.MediaPlayer
 import android.media.RingtoneManager
+import android.media.ToneGenerator
 import android.os.Build
 import android.os.IBinder
+import android.os.PowerManager
 import androidx.core.app.NotificationCompat
 import kotlinx.coroutines.*
 
@@ -26,13 +28,16 @@ class AlarmService : Service() {
     private var volumeJob: Job? = null
     private val scope = CoroutineScope(Dispatchers.Default)
     private var isAlarmRinging = false
+    private var toneGenerator: ToneGenerator? = null
 
     private val chargerReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             if (intent.action == Intent.ACTION_POWER_DISCONNECTED) {
                 val keyguardManager = context.getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
-                // Hanya bunyikan alarm jika HP dalam keadaan terkunci
-                if (keyguardManager.isKeyguardLocked) {
+                val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
+                
+                // Bunyikan alarm jika HP terkunci ATAU layar sedang mati (sleep)
+                if (keyguardManager.isKeyguardLocked || !powerManager.isInteractive) {
                     triggerAlarm()
                 }
             }
@@ -106,6 +111,13 @@ class AlarmService : Service() {
             }
         } catch (e: Exception) {
             e.printStackTrace()
+            // FALLBACK: Jika sistem gagal memutar Ringtone, gunakan ToneGenerator bawaan mesin
+            try {
+                toneGenerator = ToneGenerator(AudioManager.STREAM_ALARM, ToneGenerator.MAX_VOLUME)
+                toneGenerator?.startTone(ToneGenerator.TONE_CDMA_EMERGENCY_RINGBACK, 1000000) // Suara sirine darurat super keras
+            } catch (e2: Exception) {
+                e2.printStackTrace()
+            }
         }
 
         volumeJob = scope.launch {
@@ -130,6 +142,15 @@ class AlarmService : Service() {
             e.printStackTrace()
         }
         mediaPlayer = null
+        
+        try {
+            toneGenerator?.stopTone()
+            toneGenerator?.release()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        toneGenerator = null
+        
         volumeJob?.cancel()
     }
 
