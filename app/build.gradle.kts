@@ -7,12 +7,15 @@ android {
     namespace = "com.github.xnuvers007.chargeralarm"
     compileSdk = 34
 
+    val buildVersionCode = System.getenv("GITHUB_RUN_NUMBER")?.toIntOrNull() ?: 1
+    val buildVersionName = "1.0.$buildVersionCode"
+
     defaultConfig {
         applicationId = "com.github.xnuvers007.chargeralarm"
         minSdk = 24
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = buildVersionCode
+        versionName = buildVersionName
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {

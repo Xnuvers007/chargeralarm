@@ -29,25 +29,26 @@ jobs:
     - name: Build Release APK
       run: gradle assembleRelease
 
+    - name: Generate Release Tag
+      id: tag
+      run: echo "release_tag=v1.0.${{ github.run_number }}" >> $GITHUB_ENV
+
     - name: Rename APK
-      run: mv app/build/outputs/apk/release/app-release.apk ChargerAlarm-v1.0.apk
+      run: mv app/build/outputs/apk/release/app-release.apk ChargerAlarm-${{ env.release_tag }}.apk
 
     - name: Upload APK as Artifact
       uses: actions/upload-artifact@v4
       with:
         name: ChargerAlarm-APK
-        path: ChargerAlarm-v1.0.apk
+        path: ChargerAlarm-${{ env.release_tag }}.apk
 
-    - name: Generate Release Tag
-      id: tag
-      run: echo "release_tag=v1.0.${{ github.run_number }}" >> $GITHUB_ENV
 
     - name: Create Release and Upload APK
       uses: softprops/action-gh-release@v2
       with:
         tag_name: ${{ env.release_tag }}
         name: Release ${{ env.release_tag }}
-        files: ChargerAlarm-v1.0.apk
+        files: ChargerAlarm-${{ env.release_tag }}.apk
         generate_release_notes: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
