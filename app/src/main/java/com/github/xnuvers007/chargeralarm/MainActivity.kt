@@ -178,17 +178,17 @@ fun ChargerAlarmApp(isActiveInitial: Boolean, onActivate: () -> Unit, onDeactiva
             ) {
                 Column(modifier = Modifier.padding(20.dp)) {
                     Text(
-                        text = "Instructions:",
+                        text = "Petunjuk (Instructions):",
                         fontWeight = FontWeight.Bold,
                         color = Color.White,
                         fontSize = 18.sp,
                         modifier = Modifier.padding(bottom = 12.dp)
                     )
                     Text(
-                        text = "1. Plug in your charger.\n2. Tap ACTIVATE to enable protection.\n3. If the charger is unplugged, a loud alarm will sound.\n4. To stop the alarm or disable protection, open this app and tap STOP ALARM.",
+                        text = "1. Colokkan charger ke HP Anda.\n2. Ketuk ACTIVATE untuk mengaktifkan perlindungan.\n3. Jika charger dicabut maling, sirine darurat akan berbunyi!\n4. (Anti-Headset): Suara alarm akan tetap memaksa keluar dari speaker utama HP meskipun dicolokkan headset.\n5. Untuk mematikan alarm, cukup buka kunci layar (Unlock) HP Anda atau ketuk STOP ALARM.\n\n✔️ Mendukung Android 7.0 hingga Android 16+",
                         color = Color.LightGray,
-                        fontSize = 15.sp,
-                        lineHeight = 24.sp
+                        fontSize = 14.sp,
+                        lineHeight = 20.sp
                     )
                 }
             }
