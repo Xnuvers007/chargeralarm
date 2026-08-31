@@ -8,6 +8,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.app.KeyguardManager
 import android.media.AudioAttributes
 import android.media.AudioManager
 import android.media.MediaPlayer
@@ -28,7 +29,21 @@ class AlarmService : Service() {
     private val chargerReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             if (intent.action == Intent.ACTION_POWER_DISCONNECTED) {
-                triggerAlarm()
+                val keyguardManager = context.getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
+                // Hanya bunyikan alarm jika HP dalam keadaan terkunci
+                if (keyguardManager.isKeyguardLocked) {
+                    triggerAlarm()
+                }
+            }
+        }
+    }
+
+    private val unlockReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            if (intent.action == Intent.ACTION_USER_PRESENT) {
+                // Phone successfully unlocked! 
+                // Matikan suara alarm, tapi JANGAN matikan service agar tetap aktif untuk pengecasan berikutnya.
+                stopAlarm()
             }
         }
     }
@@ -39,6 +54,7 @@ class AlarmService : Service() {
         createNotificationChannel()
         startForeground(1, buildNotification())
         registerReceiver(chargerReceiver, IntentFilter(Intent.ACTION_POWER_DISCONNECTED))
+        registerReceiver(unlockReceiver, IntentFilter(Intent.ACTION_USER_PRESENT))
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -48,6 +64,7 @@ class AlarmService : Service() {
     override fun onDestroy() {
         super.onDestroy()
         unregisterReceiver(chargerReceiver)
+        unregisterReceiver(unlockReceiver)
         stopAlarm()
         scope.cancel()
     }

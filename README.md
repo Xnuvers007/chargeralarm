@@ -37,7 +37,9 @@
 3. Tap the **ACTIVATE** button. The screen will turn green.
 4. Lock your phone and walk away with peace of mind.
 5. If the charger is unplugged, the alarm will sound loudly!
-6. To disable the alarm, you must unlock your phone, open the app, and tap **STOP ALARM & DEACTIVATE**.
+6. To disable the alarm, you have two options:
+   - **Option A**: Simply unlock your phone successfully (via Password, PIN, Fingerprint, or Face Unlock). The system will automatically detect you and stop the alarm.
+   - **Option B**: Open the app and tap **STOP ALARM & DEACTIVATE**.
 
 ---
 

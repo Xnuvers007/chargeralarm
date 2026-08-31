@@ -26,6 +26,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import android.content.Context
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 
 class MainActivity : ComponentActivity() {
 
@@ -93,7 +97,22 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun ChargerAlarmApp(isActiveInitial: Boolean, onActivate: () -> Unit, onDeactivate: () -> Unit) {
+    val context = LocalContext.current
     var isActive by remember { mutableStateOf(isActiveInitial) }
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                val sharedPref = context.getSharedPreferences("ChargerAlarmPrefs", Context.MODE_PRIVATE)
+                isActive = sharedPref.getBoolean("isActive", false)
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
 
     val bgColor by animateColorAsState(
         targetValue = if (isActive) Color(0xFF003314) else Color(0xFF330000),

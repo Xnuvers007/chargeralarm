@@ -35,8 +35,13 @@ A common tactic for thieves is to quickly restart the phone to kill any running 
 - **Solution**: We implemented a `BootReceiver` that listens for `BOOT_COMPLETED` and `QUICKBOOT_POWERON`.
 - **Mechanism**: When the phone finishes rebooting, the system triggers `BootReceiver`. It reads `SharedPreferences`. If `isActive` was `true` before the reboot, the `BootReceiver` will automatically and silently start the `AlarmService` again in the background.
 
-### C. No UI Bypass
-The `AlarmService` does not rely on `MainActivity` to be open. A thief cannot simply swipe the app away from the "Recent Apps" screen to stop the alarm. The *only* programmatic way to stop the alarm is by passing `false` to the `SharedPreferences` and calling `stopService()`, which is triggered strictly by the "STOP ALARM" button inside the app.
+### C. Auto-Deactivate on Secure Unlock
+To provide a seamless experience without sacrificing security, the `AlarmService` registers a receiver for `android.intent.action.USER_PRESENT`. 
+- **Mechanism**: The Android OS strictly broadcasts this intent *only* when the user has successfully bypassed the keyguard (e.g., entered the correct PIN, Pattern, or authenticated via Biometrics).
+- **Result**: When the phone is unlocked successfully, the service automatically deactivates the alarm and updates the `SharedPreferences` to `isActive = false`, stopping itself without requiring the user to open the app manually. A thief cannot trigger this intent because they cannot unlock the device.
+
+### D. No UI Bypass
+The `AlarmService` does not rely on `MainActivity` to be open. A thief cannot simply swipe the app away from the "Recent Apps" screen to stop the alarm. The *only* ways to stop it are by unlocking the phone securely or by passing `false` to the `SharedPreferences` via the "STOP ALARM" button inside the app.
 
 ---
 
