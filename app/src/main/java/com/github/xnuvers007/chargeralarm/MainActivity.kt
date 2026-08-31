@@ -25,6 +25,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
+import android.content.Context
 
 class MainActivity : ComponentActivity() {
 
@@ -43,6 +44,9 @@ class MainActivity : ComponentActivity() {
             }
         }
 
+        val sharedPref = getSharedPreferences("ChargerAlarmPrefs", Context.MODE_PRIVATE)
+        val isActiveInitial = sharedPref.getBoolean("isActive", false)
+
         setContent {
             MaterialTheme(
                 colorScheme = darkColorScheme(
@@ -57,8 +61,15 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     ChargerAlarmApp(
-                        onActivate = { startAlarmService() },
-                        onDeactivate = { stopAlarmService() }
+                        isActiveInitial = isActiveInitial,
+                        onActivate = { 
+                            sharedPref.edit().putBoolean("isActive", true).apply()
+                            startAlarmService() 
+                        },
+                        onDeactivate = { 
+                            sharedPref.edit().putBoolean("isActive", false).apply()
+                            stopAlarmService() 
+                        }
                     )
                 }
             }
@@ -81,8 +92,8 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun ChargerAlarmApp(onActivate: () -> Unit, onDeactivate: () -> Unit) {
-    var isActive by remember { mutableStateOf(false) }
+fun ChargerAlarmApp(isActiveInitial: Boolean, onActivate: () -> Unit, onDeactivate: () -> Unit) {
+    var isActive by remember { mutableStateOf(isActiveInitial) }
 
     val bgColor by animateColorAsState(
         targetValue = if (isActive) Color(0xFF003314) else Color(0xFF330000),
