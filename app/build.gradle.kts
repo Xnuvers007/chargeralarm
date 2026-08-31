@@ -16,9 +16,6 @@ android {
         targetSdk = 34
         versionCode = buildVersionCode
         versionName = buildVersionName
-        
-        // Buang resource bahasa asing dari library bawaan untuk memperkecil APK
-        resConfigs("en", "in")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -32,13 +29,15 @@ android {
             storePassword = "password"
             keyAlias = "my-alias"
             keyPassword = "password"
+            enableV1Signing = true
+            enableV2Signing = true
         }
     }
 
     buildTypes {
         release {
-            isMinifyEnabled = true
-            isShrinkResources = true
+            isMinifyEnabled = false
+            isShrinkResources = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
