@@ -16,6 +16,9 @@ android {
         targetSdk = 34
         versionCode = buildVersionCode
         versionName = buildVersionName
+        
+        // Buang resource bahasa asing dari library bawaan untuk memperkecil APK
+        resConfigs("en", "in")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
