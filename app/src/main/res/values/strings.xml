@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Charger Alarm</string>
+    <string name="protection_active">PROTECTION ACTIVE</string>
+    <string name="protection_off">PROTECTION OFF</string>
+    <string name="stop_alarm">STOP ALARM\n&amp;\nDEACTIVATE</string>
+    <string name="activate">ACTIVATE</string>
+    <string name="instructions_title">Instructions:</string>
+    <string name="instructions_body">1. Plug in your charger.\n2. Tap ACTIVATE to enable protection.\n3. If the charger is unplugged by anyone, an emergency siren will blast!\n4. (Anti-Headset): The alarm will force sound through the main speaker even if a headset is plugged in.\n5. To stop the alarm, simply Unlock your phone or tap STOP ALARM.\n\n✔️ Supports Android 7.0 up to Android 16+</string>
+</resources>

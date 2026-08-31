@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Charger Alarm</string>
+    <string name="protection_active">PROTEKSI AKTIF</string>
+    <string name="protection_off">PROTEKSI MATI</string>
+    <string name="stop_alarm">HENTIKAN ALARM\n&amp;\nNONAKTIFKAN</string>
+    <string name="activate">AKTIFKAN</string>
+    <string name="instructions_title">Petunjuk (Instructions):</string>
+    <string name="instructions_body">1. Colokkan charger ke HP Anda.\n2. Ketuk AKTIFKAN untuk menyalakan perlindungan.\n3. Jika charger dicabut maling, sirine darurat akan berbunyi!\n4. (Anti-Headset): Suara alarm akan tetap memaksa keluar dari speaker utama HP meskipun dicolokkan headset.\n5. Untuk mematikan alarm, cukup buka kunci layar (Unlock) HP Anda atau ketuk HENTIKAN ALARM.\n\n✔️ Mendukung Android 7.0 hingga Android 16+</string>
+</resources>

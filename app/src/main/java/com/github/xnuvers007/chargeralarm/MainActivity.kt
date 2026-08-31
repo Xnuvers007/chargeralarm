@@ -20,6 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -138,7 +139,7 @@ fun ChargerAlarmApp(isActiveInitial: Boolean, onActivate: () -> Unit, onDeactiva
             modifier = Modifier.padding(24.dp)
         ) {
             Text(
-                text = if (isActive) "PROTECTION ACTIVE" else "PROTECTION OFF",
+                text = if (isActive) stringResource(id = R.string.protection_active) else stringResource(id = R.string.protection_off),
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 color = if (isActive) Color(0xFF00E676) else Color(0xFFFF1744),
@@ -161,7 +162,7 @@ fun ChargerAlarmApp(isActiveInitial: Boolean, onActivate: () -> Unit, onDeactiva
                     .shadow(24.dp, CircleShape)
             ) {
                 Text(
-                    text = if (isActive) "STOP ALARM\n&\nDEACTIVATE" else "ACTIVATE",
+                    text = if (isActive) stringResource(id = R.string.stop_alarm) else stringResource(id = R.string.activate),
                     fontSize = 20.sp,
                     fontWeight = FontWeight.ExtraBold,
                     color = Color.White,
@@ -178,14 +179,14 @@ fun ChargerAlarmApp(isActiveInitial: Boolean, onActivate: () -> Unit, onDeactiva
             ) {
                 Column(modifier = Modifier.padding(20.dp)) {
                     Text(
-                        text = "Petunjuk (Instructions):",
+                        text = stringResource(id = R.string.instructions_title),
                         fontWeight = FontWeight.Bold,
                         color = Color.White,
                         fontSize = 18.sp,
                         modifier = Modifier.padding(bottom = 12.dp)
                     )
                     Text(
-                        text = "1. Colokkan charger ke HP Anda.\n2. Ketuk ACTIVATE untuk mengaktifkan perlindungan.\n3. Jika charger dicabut maling, sirine darurat akan berbunyi!\n4. (Anti-Headset): Suara alarm akan tetap memaksa keluar dari speaker utama HP meskipun dicolokkan headset.\n5. Untuk mematikan alarm, cukup buka kunci layar (Unlock) HP Anda atau ketuk STOP ALARM.\n\n✔️ Mendukung Android 7.0 hingga Android 16+",
+                        text = stringResource(id = R.string.instructions_body),
                         color = Color.LightGray,
                         fontSize = 14.sp,
                         lineHeight = 20.sp
