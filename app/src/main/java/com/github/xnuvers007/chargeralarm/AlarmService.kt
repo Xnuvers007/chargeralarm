@@ -10,6 +10,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.app.KeyguardManager
 import android.media.AudioAttributes
+import android.media.AudioDeviceInfo
 import android.media.AudioManager
 import android.media.MediaPlayer
 import android.media.RingtoneManager
@@ -87,6 +88,18 @@ class AlarmService : Service() {
                         .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
                         .build()
                 )
+                
+                // Paksa suara keluar dari speaker HP bawaan, abaikan headset/bluetooth
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    val devices = audioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS)
+                    for (device in devices) {
+                        if (device.type == AudioDeviceInfo.TYPE_BUILTIN_SPEAKER) {
+                            setPreferredDevice(device)
+                            break
+                        }
+                    }
+                }
+                
                 isLooping = true
                 prepare()
                 start()
