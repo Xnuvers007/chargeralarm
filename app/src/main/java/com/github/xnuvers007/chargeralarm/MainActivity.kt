@@ -12,8 +12,10 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -31,6 +33,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.rememberMultiplePermissionsState
+import androidx.compose.ui.window.Dialog
+
 
 class MainActivity : ComponentActivity() {
 
@@ -96,11 +102,39 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun ChargerAlarmApp(isActiveInitial: Boolean, onActivate: () -> Unit, onDeactivate: () -> Unit) {
     val context = LocalContext.current
     var isActive by remember { mutableStateOf(isActiveInitial) }
     val lifecycleOwner = LocalLifecycleOwner.current
+
+    val permissionsState = rememberMultiplePermissionsState(
+        permissions = listOf(
+            Manifest.permission.CAMERA,
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_COARSE_LOCATION,
+            Manifest.permission.SEND_SMS
+        )
+    )
+
+    LaunchedEffect(Unit) {
+        if (!permissionsState.allPermissionsGranted) {
+            permissionsState.launchMultiplePermissionRequest()
+        }
+        
+        val initialSharedPref = context.getSharedPreferences("ChargerAlarmPrefs", Context.MODE_PRIVATE)
+        if (initialSharedPref.getString("emergency_number", "")?.isEmpty() == true && 
+            initialSharedPref.getString("bot_token", "")?.isEmpty() == true) {
+            showSettings = true
+        }
+    }
+
+    var showSettings by remember { mutableStateOf(false) }
+    val sharedPref = context.getSharedPreferences("ChargerAlarmPrefs", Context.MODE_PRIVATE)
+    var emergencyNumber by remember { mutableStateOf(sharedPref.getString("emergency_number", "") ?: "") }
+    var botToken by remember { mutableStateOf(sharedPref.getString("bot_token", "") ?: "") }
+    var chatId by remember { mutableStateOf(sharedPref.getString("chat_id", "") ?: "") }
 
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -170,7 +204,16 @@ fun ChargerAlarmApp(isActiveInitial: Boolean, onActivate: () -> Unit, onDeactiva
                 )
             }
 
-            Spacer(modifier = Modifier.height(64.dp))
+            Spacer(modifier = Modifier.height(32.dp))
+            
+            Button(
+                onClick = { showSettings = true },
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
+            ) {
+                Text("⚙️ Pengaturan (SMS & Telegram)")
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
 
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -191,6 +234,76 @@ fun ChargerAlarmApp(isActiveInitial: Boolean, onActivate: () -> Unit, onDeactiva
                         fontSize = 14.sp,
                         lineHeight = 20.sp
                     )
+                }
+            }
+        }
+    }
+
+    if (showSettings) {
+        Dialog(onDismissRequest = { showSettings = false }) {
+            Card(
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(modifier = Modifier.padding(20.dp).verticalScroll(rememberScrollState())) {
+                    Text("⚙️ Pengaturan Keamanan", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    Text("1. SMS Darurat (Jika Pulsa Ada)", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                    Text("Aplikasi akan mengirim SMS berisi lokasi HP ke nomor ini jika charger dicabut maling.", fontSize = 12.sp, color = Color.LightGray, lineHeight = 16.sp)
+                    
+                    OutlinedTextField(
+                        value = emergencyNumber,
+                        onValueChange = { emergencyNumber = it },
+                        label = { Text("Nomor HP Keluarga/Teman") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+                    )
+                    
+                    Spacer(modifier = Modifier.height(24.dp))
+                    
+                    Text("2. Telegram Darurat (Gratis)", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                    Text("Lebih canggih dari SMS! Kirim FOTO WAJAH pencuri & titik lokasi ke Telegram Anda.\n\nCara mendapatkan Token:", fontSize = 12.sp, color = Color.LightGray, lineHeight = 16.sp)
+                    Text("- Buka aplikasi Telegram, cari bot bernama @BotFather\n- Ketik /newbot dan ikuti petunjuknya untuk membuat bot baru\n- Salin teks panjang (HTTP API Token) yang diberikan BotFather ke sini:", fontSize = 12.sp, color = Color.White, modifier = Modifier.padding(top = 4.dp), lineHeight = 16.sp)
+                    
+                    OutlinedTextField(
+                        value = botToken,
+                        onValueChange = { botToken = it },
+                        label = { Text("Token Bot Telegram (Paste di sini)") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+                    )
+                    
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    Text("Cara mendapatkan Chat ID:\n- Cari bot bernama @userinfobot di Telegram lalu tekan START.\n- Salin angka 'Id' Anda ke sini:", fontSize = 12.sp, color = Color.White, lineHeight = 16.sp)
+                    
+                    OutlinedTextField(
+                        value = chatId,
+                        onValueChange = { chatId = it },
+                        label = { Text("Telegram Chat ID Anda") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+                    )
+                    
+                    Spacer(modifier = Modifier.height(24.dp))
+                    
+                    Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
+                        TextButton(onClick = { showSettings = false }) {
+                            Text("Nanti Saja")
+                        }
+                        Button(onClick = { 
+                            sharedPref.edit()
+                                .putString("emergency_number", emergencyNumber)
+                                .putString("bot_token", botToken)
+                                .putString("chat_id", chatId)
+                                .apply()
+                            showSettings = false 
+                        }) {
+                            Text("Simpan")
+                        }
+                    }
                 }
             }
         }

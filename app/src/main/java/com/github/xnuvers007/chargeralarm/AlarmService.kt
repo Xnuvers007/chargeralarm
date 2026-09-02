@@ -20,6 +20,15 @@ import android.os.IBinder
 import android.os.PowerManager
 import androidx.core.app.NotificationCompat
 import kotlinx.coroutines.*
+import android.annotation.SuppressLint
+import android.hardware.camera2.CameraManager
+import android.location.Location
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
+import com.google.android.gms.tasks.CancellationTokenSource
+import com.google.android.gms.tasks.Tasks
+import java.io.File
 
 class AlarmService : Service() {
 
@@ -29,6 +38,13 @@ class AlarmService : Service() {
     private val scope = CoroutineScope(Dispatchers.Default)
     private var isAlarmRinging = false
     private var toneGenerator: ToneGenerator? = null
+
+    private var strobeJob: Job? = null
+    private var locationTimerJob: Job? = null
+    private lateinit var cameraManager: CameraManager
+    private var cameraId: String? = null
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
+    private lateinit var emergencySender: EmergencySender
 
     private val chargerReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
@@ -57,6 +73,19 @@ class AlarmService : Service() {
     override fun onCreate() {
         super.onCreate()
         audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+        
+        cameraManager = getSystemService(Context.CAMERA_SERVICE) as CameraManager
+        try {
+            cameraId = cameraManager.cameraIdList.firstOrNull { id ->
+                cameraManager.getCameraCharacteristics(id)
+                    .get(android.hardware.camera2.CameraCharacteristics.FLASH_INFO_AVAILABLE) == true
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+        emergencySender = EmergencySender(this)
+        
         createNotificationChannel()
         startForeground(1, buildNotification())
         registerReceiver(chargerReceiver, IntentFilter(Intent.ACTION_POWER_DISCONNECTED))
@@ -131,6 +160,43 @@ class AlarmService : Service() {
                 delay(100) // Force max volume every 100ms
             }
         }
+        
+        // start strobe
+        strobeJob = scope.launch {
+            var isTorchOn = false
+            while (isActive && isAlarmRinging) {
+                try {
+                    cameraId?.let { id ->
+                        cameraManager.setTorchMode(id, isTorchOn)
+                        isTorchOn = !isTorchOn
+                    }
+                } catch (e: Exception) {
+                    // ignore camera access exception if used by another app
+                }
+                delay(150)
+            }
+            try {
+                cameraId?.let { cameraManager.setTorchMode(it, false) }
+            } catch (e: Exception) {}
+        }
+        
+        // start selfie
+        val selfieIntent = Intent(this, TransparentCameraActivity::class.java).apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+        }
+        try {
+            startActivity(selfieIntent)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
+        // start emergency tracker (delay 30s)
+        locationTimerJob = scope.launch {
+            delay(30_000)
+            if (isActive && isAlarmRinging) {
+                sendEmergencyAlert()
+            }
+        }
     }
 
     private fun stopAlarm() {
@@ -152,6 +218,55 @@ class AlarmService : Service() {
         toneGenerator = null
         
         volumeJob?.cancel()
+        strobeJob?.cancel()
+        locationTimerJob?.cancel()
+        try {
+            cameraId?.let { cameraManager.setTorchMode(it, false) }
+        } catch (e: Exception) {}
+    }
+    
+    @SuppressLint("MissingPermission")
+    private suspend fun sendEmergencyAlert() {
+        val prefs = getSharedPreferences("ChargerAlarmPrefs", MODE_PRIVATE)
+        val emergencyNumber = prefs.getString("emergency_number", "") ?: ""
+        val botToken = prefs.getString("bot_token", "") ?: ""
+        val chatId = prefs.getString("chat_id", "") ?: ""
+        
+        var locationText = "Location not available"
+        try {
+            val locationResult = fusedLocationClient.getCurrentLocation(
+                Priority.PRIORITY_HIGH_ACCURACY,
+                CancellationTokenSource().token
+            )
+            val location: Location? = Tasks.await(locationResult)
+            if (location != null) {
+                locationText = "https://maps.google.com/?q=${location.latitude},${location.longitude}"
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
+        val message = "🚨 URGENT: Charger Alarm Triggered! Phone might be stolen.\nLocation: $locationText"
+        
+        // Try SMS
+        if (emergencyNumber.isNotEmpty()) {
+            emergencySender.sendSMS(emergencyNumber, message)
+        }
+        
+        // Try Telegram
+        if (botToken.isNotEmpty() && chatId.isNotEmpty()) {
+            val photoPath = prefs.getString("last_intruder_photo", "")
+            if (photoPath != null && photoPath.isNotEmpty()) {
+                val file = File(photoPath)
+                if (file.exists()) {
+                    emergencySender.sendTelegramPhoto(botToken, chatId, file, message)
+                } else {
+                    emergencySender.sendTelegramMessage(botToken, chatId, message)
+                }
+            } else {
+                emergencySender.sendTelegramMessage(botToken, chatId, message)
+            }
+        }
     }
 
     private fun createNotificationChannel() {
