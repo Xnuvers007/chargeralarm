@@ -231,6 +231,8 @@ class AlarmService : Service() {
         val emergencyNumber = prefs.getString("emergency_number", "") ?: ""
         val botToken = prefs.getString("bot_token", "") ?: ""
         val chatId = prefs.getString("chat_id", "") ?: ""
+        val enableSms = prefs.getBoolean("enable_sms", true)
+        val enableTelegram = prefs.getBoolean("enable_telegram", true)
         
         var locationText = "Location not available"
         try {
@@ -249,12 +251,12 @@ class AlarmService : Service() {
         val message = "🚨 URGENT: Charger Alarm Triggered! Phone might be stolen.\nLocation: $locationText"
         
         // Try SMS
-        if (emergencyNumber.isNotEmpty()) {
+        if (enableSms && emergencyNumber.isNotEmpty()) {
             emergencySender.sendSMS(emergencyNumber, message)
         }
         
         // Try Telegram
-        if (botToken.isNotEmpty() && chatId.isNotEmpty()) {
+        if (enableTelegram && botToken.isNotEmpty() && chatId.isNotEmpty()) {
             val photoPath = prefs.getString("last_intruder_photo", "")
             if (photoPath != null && photoPath.isNotEmpty()) {
                 val file = File(photoPath)

@@ -135,6 +135,8 @@ fun ChargerAlarmApp(isActiveInitial: Boolean, onActivate: () -> Unit, onDeactiva
     var emergencyNumber by remember { mutableStateOf(sharedPref.getString("emergency_number", "") ?: "") }
     var botToken by remember { mutableStateOf(sharedPref.getString("bot_token", "") ?: "") }
     var chatId by remember { mutableStateOf(sharedPref.getString("chat_id", "") ?: "") }
+    var enableSms by remember { mutableStateOf(sharedPref.getBoolean("enable_sms", true)) }
+    var enableTelegram by remember { mutableStateOf(sharedPref.getBoolean("enable_telegram", true)) }
 
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -250,42 +252,54 @@ fun ChargerAlarmApp(isActiveInitial: Boolean, onActivate: () -> Unit, onDeactiva
                     Text("⚙️ Pengaturan Keamanan", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.White)
                     Spacer(modifier = Modifier.height(16.dp))
                     
-                    Text("1. SMS Darurat (Jika Pulsa Ada)", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-                    Text("Aplikasi akan mengirim SMS berisi lokasi HP ke nomor ini jika charger dicabut maling.", fontSize = 12.sp, color = Color.LightGray, lineHeight = 16.sp)
+                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                        Text("1. SMS Darurat (Jika Pulsa Ada)", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, modifier = Modifier.weight(1f))
+                        Switch(checked = enableSms, onCheckedChange = { enableSms = it })
+                    }
                     
-                    OutlinedTextField(
-                        value = emergencyNumber,
-                        onValueChange = { emergencyNumber = it },
-                        label = { Text("Nomor HP Keluarga/Teman") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
-                    )
+                    if (enableSms) {
+                        Text("Aplikasi akan mengirim SMS berisi lokasi HP ke nomor ini jika charger dicabut maling.", fontSize = 12.sp, color = Color.LightGray, lineHeight = 16.sp)
+                        
+                        OutlinedTextField(
+                            value = emergencyNumber,
+                            onValueChange = { emergencyNumber = it },
+                            label = { Text("Nomor HP Keluarga/Teman") },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+                        )
+                    }
                     
                     Spacer(modifier = Modifier.height(24.dp))
                     
-                    Text("2. Telegram Darurat (Gratis)", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-                    Text("Lebih canggih dari SMS! Kirim FOTO WAJAH pencuri & titik lokasi ke Telegram Anda.\n\nCara mendapatkan Token:", fontSize = 12.sp, color = Color.LightGray, lineHeight = 16.sp)
-                    Text("- Buka aplikasi Telegram, cari bot bernama @BotFather\n- Ketik /newbot dan ikuti petunjuknya untuk membuat bot baru\n- Salin teks panjang (HTTP API Token) yang diberikan BotFather ke sini:", fontSize = 12.sp, color = Color.White, modifier = Modifier.padding(top = 4.dp), lineHeight = 16.sp)
+                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                        Text("2. Telegram Darurat (Gratis)", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, modifier = Modifier.weight(1f))
+                        Switch(checked = enableTelegram, onCheckedChange = { enableTelegram = it })
+                    }
                     
-                    OutlinedTextField(
-                        value = botToken,
-                        onValueChange = { botToken = it },
-                        label = { Text("Token Bot Telegram (Paste di sini)") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
-                    )
-                    
-                    Spacer(modifier = Modifier.height(16.dp))
-                    
-                    Text("Cara mendapatkan Chat ID:\n- Cari bot bernama @userinfobot di Telegram lalu tekan START.\n- Salin angka 'Id' Anda ke sini:", fontSize = 12.sp, color = Color.White, lineHeight = 16.sp)
-                    
-                    OutlinedTextField(
-                        value = chatId,
-                        onValueChange = { chatId = it },
-                        label = { Text("Telegram Chat ID Anda") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
-                    )
+                    if (enableTelegram) {
+                        Text("Lebih canggih dari SMS! Kirim FOTO WAJAH pencuri & titik lokasi ke Telegram Anda.\n\nCara mendapatkan Token:", fontSize = 12.sp, color = Color.LightGray, lineHeight = 16.sp)
+                        Text("- Buka aplikasi Telegram, cari bot bernama @BotFather\n- Ketik /newbot dan ikuti petunjuknya untuk membuat bot baru\n- Salin teks panjang (HTTP API Token) yang diberikan BotFather ke sini:", fontSize = 12.sp, color = Color.White, modifier = Modifier.padding(top = 4.dp), lineHeight = 16.sp)
+                        
+                        OutlinedTextField(
+                            value = botToken,
+                            onValueChange = { botToken = it },
+                            label = { Text("Token Bot Telegram (Paste di sini)") },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+                        )
+                        
+                        Spacer(modifier = Modifier.height(16.dp))
+                        
+                        Text("Cara mendapatkan Chat ID:\n- Cari bot bernama @userinfobot di Telegram lalu tekan START.\n- Salin angka 'Id' Anda ke sini:", fontSize = 12.sp, color = Color.White, lineHeight = 16.sp)
+                        
+                        OutlinedTextField(
+                            value = chatId,
+                            onValueChange = { chatId = it },
+                            label = { Text("Telegram Chat ID Anda") },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+                        )
+                    }
                     
                     Spacer(modifier = Modifier.height(24.dp))
                     
@@ -298,6 +312,8 @@ fun ChargerAlarmApp(isActiveInitial: Boolean, onActivate: () -> Unit, onDeactiva
                                 .putString("emergency_number", emergencyNumber)
                                 .putString("bot_token", botToken)
                                 .putString("chat_id", chatId)
+                                .putBoolean("enable_sms", enableSms)
+                                .putBoolean("enable_telegram", enableTelegram)
                                 .apply()
                             showSettings = false 
                         }) {
