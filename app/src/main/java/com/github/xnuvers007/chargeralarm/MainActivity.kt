@@ -118,6 +118,14 @@ fun ChargerAlarmApp(isActiveInitial: Boolean, onActivate: () -> Unit, onDeactiva
         )
     )
 
+    var showSettings by remember { mutableStateOf(false) }
+    val sharedPref = context.getSharedPreferences("ChargerAlarmPrefs", Context.MODE_PRIVATE)
+    var emergencyNumber by remember { mutableStateOf(sharedPref.getString("emergency_number", "") ?: "") }
+    var botToken by remember { mutableStateOf(sharedPref.getString("bot_token", "") ?: "") }
+    var chatId by remember { mutableStateOf(sharedPref.getString("chat_id", "") ?: "") }
+    var enableSms by remember { mutableStateOf(sharedPref.getBoolean("enable_sms", true)) }
+    var enableTelegram by remember { mutableStateOf(sharedPref.getBoolean("enable_telegram", true)) }
+
     LaunchedEffect(Unit) {
         if (!permissionsState.allPermissionsGranted) {
             permissionsState.launchMultiplePermissionRequest()
@@ -129,14 +137,6 @@ fun ChargerAlarmApp(isActiveInitial: Boolean, onActivate: () -> Unit, onDeactiva
             showSettings = true
         }
     }
-
-    var showSettings by remember { mutableStateOf(false) }
-    val sharedPref = context.getSharedPreferences("ChargerAlarmPrefs", Context.MODE_PRIVATE)
-    var emergencyNumber by remember { mutableStateOf(sharedPref.getString("emergency_number", "") ?: "") }
-    var botToken by remember { mutableStateOf(sharedPref.getString("bot_token", "") ?: "") }
-    var chatId by remember { mutableStateOf(sharedPref.getString("chat_id", "") ?: "") }
-    var enableSms by remember { mutableStateOf(sharedPref.getBoolean("enable_sms", true)) }
-    var enableTelegram by remember { mutableStateOf(sharedPref.getBoolean("enable_telegram", true)) }
 
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
